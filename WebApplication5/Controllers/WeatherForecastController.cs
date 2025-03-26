@@ -44,7 +44,7 @@ namespace WebApplication5.Controllers
 
                     User newUser = new User
                     {
-                        Name = userData.Login,
+                        Login = userData.Login,
                         Password = userData.Password,
                     };
                     bool result = await _supabaseContext.InsertUser(_supabaseClient, newUser);
