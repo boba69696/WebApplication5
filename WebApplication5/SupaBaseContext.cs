@@ -68,5 +68,69 @@ namespace WebApplication5
                 return false;
             }
         }
+        public async Task<List<City>> GetAllCities(Supabase.Client _supabaseClient)
+        {
+            var result = await _supabaseClient.From<City>().Get();
+            return result.Models;
+        }
+
+        public async Task<bool> InsertCity(Supabase.Client _supabaseClient, City city)
+        {
+            try
+            {
+                city.CreatedAt = DateTime.UtcNow;
+                var response = await _supabaseClient.From<City>().Insert(city);
+                return response.ResponseMessage.IsSuccessStatusCode;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
+        public async Task<bool> UpdateCity(Supabase.Client _supabaseClient, long id, string name, long population)
+        {
+            try
+            {
+                var city = await _supabaseClient.From<City>()
+                    .Where(x => x.Id == id)
+                    .Single();
+
+                if (city != null)
+                {
+                    city.Name = name;
+                    city.Population = population;
+                    await city.Update<City>();
+                    return true;
+                }
+                return false;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Ошибка при обновлении города: {ex.Message}");
+                return false;
+            }
+        }
+        public async Task<bool> DeleteCity(Supabase.Client _supabaseClient, long id)
+        {
+            try
+            {
+                var city = await _supabaseClient.From<City>()
+                    .Where(x => x.Id == id)
+                    .Single();
+
+                if (city != null)
+                {
+                    await city.Delete<City>();
+                    return true;
+                }
+                return false;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Ошибка при удалении города: {ex.Message}");
+                return false;
+            }
+        }
     }
 }

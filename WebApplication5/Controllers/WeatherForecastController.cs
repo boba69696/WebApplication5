@@ -116,6 +116,102 @@ namespace WebApplication5.Controllers
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
+        // Добавляем в WeatherForecastController.cs
+
+        // Получение списка всех городов
+        [HttpGet("GetAllCities", Name = "GetAllCities")]
+        public async Task<IActionResult> GetAllCities()
+        {
+            try
+            {
+                var result = await _supabaseContext.GetAllCities(_supabaseClient);
+                return Ok(JsonConvert.SerializeObject(result, Formatting.Indented));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Ошибка сервера: {ex.Message}");
+            }
+        }
+        [HttpPost("InsertCity", Name = "InsertCity")]
+        public async Task<ActionResult> InsertCity([FromBody] CityData cityData)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(cityData.Name) || cityData.Population <= 0)
+                {
+                    return BadRequest("Название города и население обязательны");
+                }
+
+                City newCity = new City
+                {
+                    Name = cityData.Name,
+                    Population = cityData.Population,
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                bool result = await _supabaseContext.InsertCity(_supabaseClient, newCity);
+                return result ? Ok("Город успешно добавлен") : BadRequest("Ошибка при добавлении города");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Ошибка сервера: {ex.Message}");
+            }
+        }
+
+        [HttpPut("UpdateCity", Name = "UpdateCity")]
+        public async Task<ActionResult> UpdateCity([FromBody] CityUpdateData cityData)
+        {
+            try
+            {
+                if (cityData.Id <= 0 || string.IsNullOrEmpty(cityData.Name) || cityData.Population <= 0)
+                {
+                    return BadRequest("Некорректные данные для обновления");
+                }
+
+                var existingCity = await _supabaseClient.From<City>()
+                    .Where(x => x.Id == cityData.Id)
+                    .Single();
+
+                if (existingCity == null)
+                {
+                    return NotFound("Город не найден");
+                }
+
+                existingCity.Name = cityData.Name;
+                existingCity.Population = cityData.Population;
+                await existingCity.Update<City>();
+
+                return Ok("Данные города успешно обновлены");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Ошибка сервера: {ex.Message}");
+            }
+        }
+        [HttpDelete("DeleteCity", Name = "DeleteCity")]
+        public async Task<ActionResult> DeleteCity(long id)
+        {
+            try
+            {
+                if (id <= 0)
+                {
+                    return BadRequest("Некорректный ID города");
+                }
+
+                bool result = await _supabaseContext.DeleteCity(_supabaseClient, id);
+
+                if (!result)
+                {
+                    return NotFound("Город не найден или ошибка при удалении");
+                }
+
+                return Ok("Город успешно удален");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Ошибка сервера: {ex.Message}");
+            }
+        }
     }
 
     public class UserData
@@ -138,5 +234,25 @@ namespace WebApplication5.Controllers
         public string Password { get; set; }
         [JsonProperty("age")]
         public string Age { get; set; }
+    }
+    public class CityData
+    {
+        [JsonProperty("name")]
+        public string Name { get; set; }
+
+        [JsonProperty("population")]
+        public long Population { get; set; }
+    }
+
+    public class CityUpdateData
+    {
+        [JsonProperty("id")]
+        public long Id { get; set; }
+
+        [JsonProperty("name")]
+        public string Name { get; set; }
+
+        [JsonProperty("population")]
+        public long Population { get; set; }
     }
 }
