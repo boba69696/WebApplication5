@@ -35,16 +35,19 @@ namespace WebApplication5.Controllers
         {
             try
             {
-                if (string.IsNullOrEmpty(userData.Login) || string.IsNullOrEmpty(userData.Password))
+                if (string.IsNullOrEmpty(userData.Name) ||
+                    string.IsNullOrEmpty(userData.Login) ||
+                    string.IsNullOrEmpty(userData.Password))
                 {
-                    return BadRequest("Login and password are required");
+                    return BadRequest("Name, login and password are required");
                 }
 
                 User newUser = new User
                 {
+                    Name = userData.Name,
                     Login = userData.Login,
                     Password = userData.Password,
-                    Age = userData.Age // Добавлено поле Age
+                    Age = userData.Age
                 };
 
                 bool result = await _supabaseContext.InsertUser(_supabaseClient, newUser);
@@ -61,7 +64,10 @@ namespace WebApplication5.Controllers
         {
             try
             {
-                if (userData.Id <= 0 || string.IsNullOrEmpty(userData.Login) || string.IsNullOrEmpty(userData.Password))
+                if (userData.Id <= 0 ||
+                    string.IsNullOrEmpty(userData.Name) ||
+                    string.IsNullOrEmpty(userData.Login) ||
+                    string.IsNullOrEmpty(userData.Password))
                 {
                     return BadRequest("Invalid data for update");
                 }
@@ -75,11 +81,12 @@ namespace WebApplication5.Controllers
                     return NotFound("User not found");
                 }
 
+                existingUser.Name = userData.Name;
                 existingUser.Login = userData.Login;
                 existingUser.Password = userData.Password;
                 existingUser.Age = userData.Age;
 
-                await existingUser.Update<User>(); // Явное указание типа
+                await existingUser.Update<User>();
 
                 return Ok("User data updated successfully");
             }
@@ -216,10 +223,15 @@ namespace WebApplication5.Controllers
 
     public class UserData
     {
+        [JsonProperty("name")]
+        public string Name { get; set; }
+
         [JsonProperty("login")]
         public string Login { get; set; }
+
         [JsonProperty("password")]
         public string Password { get; set; }
+
         [JsonProperty("age")]
         public string Age { get; set; }
     }
@@ -228,10 +240,16 @@ namespace WebApplication5.Controllers
     {
         [JsonProperty("id")]
         public int Id { get; set; }
+
+        [JsonProperty("name")]
+        public string Name { get; set; }
+
         [JsonProperty("login")]
         public string Login { get; set; }
+
         [JsonProperty("password")]
         public string Password { get; set; }
+
         [JsonProperty("age")]
         public string Age { get; set; }
     }

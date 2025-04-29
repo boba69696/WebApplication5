@@ -23,16 +23,17 @@ namespace WebApplication5
             }
         }
 
-        public async Task<bool> UpdateUser(Supabase.Client _supabaseClient, int id, string newLogin, string newPassword, string newAge)
+        public async Task<bool> UpdateUser(Supabase.Client _supabaseClient, int id, string name, string newLogin, string newPassword, string newAge)
         {
             try
             {
                 var user = await _supabaseClient.From<User>()
-                    .Where(x => x.Id == id) // Здесь x.Id должен соответствовать имени в БД
+                    .Where(x => x.Id == id)
                     .Single();
 
                 if (user != null)
                 {
+                    user.Name = name;
                     user.Login = newLogin;
                     user.Password = newPassword;
                     user.Age = newAge;
@@ -58,13 +59,14 @@ namespace WebApplication5
 
                 if (user != null)
                 {
-                    await user.Delete<User>(); // Явное указание типа
+                    await user.Delete<User>();
                     return true;
                 }
                 return false;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                Console.WriteLine($"Error deleting user: {ex.Message}");
                 return false;
             }
         }
